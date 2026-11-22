@@ -8,17 +8,17 @@ const INSTAGRAM = "https://www.instagram.com/zpainting.corp";
 
 // Contenidos fáciles de editar: agrega o reemplaza elementos aquí.
 const heroImages = [
-  "/media/photos/hero-interior.jpeg",
-  "/media/photos/hero-kitchen.jpeg",
+  `${import.meta.env.BASE_URL}media/photos/hero-interior.jpeg`,
+  `${import.meta.env.BASE_URL}media/photos/hero-kitchen.jpeg`,
 ];
 
 const projectImages = [
-  "/media/photos/project-kitchen.jpeg",
-  "/media/photos/project-builtins.jpeg",
-  "/media/photos/project-trim.jpeg",
-  "/media/photos/project-deck.jpeg",
-  "/media/photos/project-garage-floor.jpeg",
-  "/media/photos/project-entry.jpeg",
+  `${import.meta.env.BASE_URL}media/photos/project-kitchen.jpeg`,
+  `${import.meta.env.BASE_URL}media/photos/project-builtins.jpeg`,
+  `${import.meta.env.BASE_URL}media/photos/project-trim.jpeg`,
+  `${import.meta.env.BASE_URL}media/photos/project-deck.jpeg`,
+  `${import.meta.env.BASE_URL}media/photos/project-garage-floor.jpeg`,
+  `${import.meta.env.BASE_URL}media/photos/project-entry.jpeg`,
 ];
 
 const translations = {
@@ -230,7 +230,7 @@ const translations = {
 
 const projectVideos = Array.from({ length: 7 }, (_, index) => ({
   number: String(index + 1).padStart(2, "0"),
-  source: `/media/videos/project-video-${String(index + 1).padStart(2, "0")}.mp4`,
+  source: `${import.meta.env.BASE_URL}media/videos/project-video-${String(index + 1).padStart(2, "0")}.mp4`,
 }));
 
 function Arrow({ down = false }) {
