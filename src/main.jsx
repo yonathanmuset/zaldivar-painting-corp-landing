@@ -231,6 +231,7 @@ const translations = {
 const projectVideos = Array.from({ length: 7 }, (_, index) => ({
   number: String(index + 1).padStart(2, "0"),
   source: `${import.meta.env.BASE_URL}media/videos/project-video-${String(index + 1).padStart(2, "0")}.mp4`,
+  poster: projectImages[index % projectImages.length],
 }));
 
 function Arrow({ down = false }) {
@@ -243,6 +244,40 @@ function Logo({ label }) {
       <span className="brand-mark" aria-hidden="true"><span>Z</span></span>
       <span className="brand-name">ZALDIVAR<span>PAINTING CORP</span></span>
     </a>
+  );
+}
+
+function ProjectVideoCard({ video, content, project }) {
+  const [hasError, setHasError] = useState(false);
+
+  return (
+    <article className="video-card">
+      <div className="video-frame">
+        <img className="video-poster" src={video.poster} alt="" aria-hidden="true" />
+        <video
+          controls
+          playsInline
+          preload="metadata"
+          poster={video.poster}
+          aria-label={`${content.videos.label} ${video.number}: ${project.title}`}
+          onError={() => setHasError(true)}
+          onPlaying={() => setHasError(false)}
+        >
+          <source src={video.source} type="video/mp4" />
+          {content.videos.fallback}
+        </video>
+        {hasError && (
+          <div className="video-error" role="alert">
+            <span aria-hidden="true">!</span>
+            <p>{content.videos.fallback}</p>
+          </div>
+        )}
+      </div>
+      <div className="video-caption">
+        <small>{content.videos.project} {video.number}</small>
+        <h3>{project.title}</h3>
+      </div>
+    </article>
   );
 }
 
@@ -428,17 +463,13 @@ function App() {
               <p>{content.videos.description}</p>
             </div>
             <div className="video-grid">
-              {projectVideos.map((video) => (
-                <article className="video-card" key={video.number}>
-                  <video controls playsInline preload="none" aria-label={`${content.videos.label} ${video.number}`}>
-                    <source src={video.source} type="video/mp4" />
-                    {content.videos.fallback}
-                  </video>
-                  <div className="video-caption">
-                    <small>{content.videos.project} {video.number}</small>
-                    <h3>{content.videos.title}</h3>
-                  </div>
-                </article>
+              {projectVideos.map((video, index) => (
+                <ProjectVideoCard
+                  key={video.number}
+                  video={video}
+                  content={content}
+                  project={content.projects.items[index % content.projects.items.length]}
+                />
               ))}
             </div>
           </div>
