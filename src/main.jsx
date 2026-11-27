@@ -121,6 +121,24 @@ const translations = {
       phone: "CALL US",
       address: "ADDRESS",
       instagram: "INSTAGRAM",
+      form: {
+        name: "Full name",
+        email: "Email address",
+        phone: "Phone number",
+        service: "Service of interest",
+        message: "Tell us about your project",
+        selectService: "Select a service",
+        submit: "Send request",
+        success: "Thank you! Your email app will open with the details pre-filled. We'll get back to you shortly.",
+        error: "Please fill in your name, email, and a brief message before sending.",
+        services: [
+          "Interior & exterior painting",
+          "Cabinets, kitchens & furniture",
+          "Drywall, joint compound & repairs",
+          "Staining & pressure washing",
+          "Other / not sure yet",
+        ],
+      },
     },
     footer: "All rights reserved.",
   },
@@ -223,6 +241,24 @@ const translations = {
       phone: "LLÁMANOS",
       address: "DIRECCIÓN",
       instagram: "INSTAGRAM",
+      form: {
+        name: "Nombre completo",
+        email: "Correo electrónico",
+        phone: "Teléfono",
+        message: "Cuéntanos sobre tu proyecto",
+        service: "Servicio de interés",
+        selectService: "Selecciona un servicio",
+        submit: "Enviar solicitud",
+        success: "Gracias! Tu aplicación de correo se abrirá con los datos listos. Te contactaremos pronto.",
+        error: "Por favor completa tu nombre, correo y un mensaje breve antes de enviar.",
+        services: [
+          "Pintura interior y exterior",
+          "Gabinetes, cocinas y muebles",
+          "Drywall, compound y reparaciones",
+          "Stain y lavado a presión",
+          "Otro / no estoy seguro",
+        ],
+      },
     },
     footer: "Todos los derechos reservados.",
   },
@@ -247,11 +283,11 @@ function Logo({ label }) {
   );
 }
 
-function ProjectVideoCard({ video, content, project }) {
+function ProjectVideoCard({ video, content, project, featured = false }) {
   const [hasError, setHasError] = useState(false);
 
   return (
-    <article className="video-card">
+    <article className={`video-card ${featured ? "video-card-featured" : ""}`}>
       <div className="video-frame">
         <img className="video-poster" src={video.poster} alt="" aria-hidden="true" />
         <video
@@ -272,12 +308,81 @@ function ProjectVideoCard({ video, content, project }) {
             <p>{content.videos.fallback}</p>
           </div>
         )}
+        <span className="video-badge">{content.videos.project} {video.number}</span>
       </div>
       <div className="video-caption">
-        <small>{content.videos.project} {video.number}</small>
+        <small>{project.category}</small>
         <h3>{project.title}</h3>
       </div>
     </article>
+  );
+}
+
+function ContactForm({ content, emailSubject }) {
+  const [form, setForm] = useState({ name: "", email: "", phone: "", service: "", message: "" });
+  const [status, setStatus] = useState("idle");
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
+      setStatus("error");
+      return;
+    }
+    const subject = `${emailSubject} — ${form.name}`;
+    const body = [
+      `Name: ${form.name}`,
+      `Email: ${form.email}`,
+      form.phone ? `Phone: ${form.phone}` : null,
+      form.service ? `Service: ${form.service}` : null,
+      "",
+      `Message:`,
+      form.message,
+    ].filter(Boolean).join("\n");
+
+    window.location.href = `mailto:${EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setStatus("success");
+  };
+
+  return (
+    <form className="contact-form" onSubmit={handleSubmit} noValidate>
+      <div className="form-row">
+        <label>
+          <span>{content.name}</span>
+          <input type="text" name="name" value={form.name} onChange={handleChange} autoComplete="name" />
+        </label>
+        <label>
+          <span>{content.email}</span>
+          <input type="email" name="email" value={form.email} onChange={handleChange} autoComplete="email" />
+        </label>
+      </div>
+      <div className="form-row">
+        <label>
+          <span>{content.phone}</span>
+          <input type="tel" name="phone" value={form.phone} onChange={handleChange} autoComplete="tel" />
+        </label>
+        <label>
+          <span>{content.service}</span>
+          <select name="service" value={form.service} onChange={handleChange}>
+            <option value="">{content.selectService}</option>
+            {content.services.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <label className="form-message">
+        <span>{content.message}</span>
+        <textarea name="message" value={form.message} onChange={handleChange} rows={4} />
+      </label>
+      {status === "error" && <p className="form-error" role="alert">{content.error}</p>}
+      {status === "success" && <p className="form-success" role="status">{content.success}</p>}
+      <button type="submit" className="button button-dark form-submit">{content.submit} <Arrow /></button>
+    </form>
   );
 }
 
@@ -462,15 +567,25 @@ function App() {
               </div>
               <p>{content.videos.description}</p>
             </div>
-            <div className="video-grid">
-              {projectVideos.map((video, index) => (
+            <div className="video-layout">
+              <div className="video-featured">
                 <ProjectVideoCard
-                  key={video.number}
-                  video={video}
+                  video={projectVideos[0]}
                   content={content}
-                  project={content.projects.items[index % content.projects.items.length]}
+                  project={content.projects.items[0]}
+                  featured
                 />
-              ))}
+              </div>
+              <div className="video-grid">
+                {projectVideos.slice(1).map((video, index) => (
+                  <ProjectVideoCard
+                    key={video.number}
+                    video={video}
+                    content={content}
+                    project={content.projects.items[(index + 1) % content.projects.items.length]}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -495,16 +610,16 @@ function App() {
 
         <section className="contact" id="contacto">
           <div className="container contact-grid">
-            <div>
+            <div className="contact-info">
               <p className="eyebrow dark">{content.contact.eyebrow}</p>
               <h2>{content.contact.headline}<br /><em>{content.contact.emphasis}</em></h2>
-              <a className="button button-dark" href={`mailto:${EMAIL}?subject=${encodeURIComponent(content.contact.emailSubject)}`}>{content.contact.estimate} <Arrow /></a>
+              <address>
+                <div><small>{content.contact.phone}</small><a href={`tel:+1${PHONE.replaceAll("-", "")}`}>{PHONE}</a></div>
+                <div><small>{content.contact.address}</small><span>Glen Cove, NY 11542</span></div>
+                <div><small>{content.contact.instagram}</small><a href={INSTAGRAM} target="_blank" rel="noreferrer">@zpainting.corp</a></div>
+              </address>
             </div>
-            <address>
-              <div><small>{content.contact.phone}</small><a href={`tel:+1${PHONE.replaceAll("-", "")}`}>{PHONE}</a></div>
-              <div><small>{content.contact.address}</small><span>Glen Cove, NY 11542</span></div>
-              <div><small>{content.contact.instagram}</small><a href={INSTAGRAM} target="_blank" rel="noreferrer">@zpainting.corp</a></div>
-            </address>
+            <ContactForm content={content.contact.form} emailSubject={content.contact.emailSubject} />
           </div>
         </section>
       </main>
