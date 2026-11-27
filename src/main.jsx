@@ -137,8 +137,8 @@ const translations = {
         contactMethod: "Preferred contact method",
         contactCall: "Phone call",
         contactText: "Text message",
-        photo: "Reference photo (optional)",
-        photoHint: "Take or choose a photo from your phone",
+        photo: "Want to share a reference photo?",
+        photoHint: "File attachments aren't supported by this form. Send photos separately to",
         message: "Project details",
         submit: "Send request",
         required: "required",
@@ -265,8 +265,8 @@ const translations = {
         contactMethod: "Método de contacto preferido",
         contactCall: "Llamada telefónica",
         contactText: "Mensaje de texto",
-        photo: "Foto de referencia (opcional)",
-        photoHint: "Toma o elige una foto desde tu teléfono",
+        photo: "¿Quieres compartir una foto de referencia?",
+        photoHint: "Este formulario no admite archivos adjuntos. Envía las fotos por separado a",
         message: "Detalles del proyecto",
         submit: "Enviar solicitud",
         required: "obligatorio",
@@ -412,20 +412,12 @@ function VideoSpotlight({ videos, content }) {
 function ContactForm({ language, services }) {
   const content = translations[language].contact.form;
   const [form, setForm] = useState(EMPTY_CONTACT_FORM);
-  const [photoName, setPhotoName] = useState("");
   const [status, setStatus] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((currentForm) => ({ ...currentForm, [name]: value }));
-    setStatus("idle");
-    setErrorMessage("");
-  };
-
-  const handlePhoto = (event) => {
-    const file = event.target.files && event.target.files[0];
-    setPhotoName(file ? file.name : "");
     setStatus("idle");
     setErrorMessage("");
   };
@@ -460,7 +452,6 @@ function ContactForm({ language, services }) {
 
       formElement.reset();
       setForm(EMPTY_CONTACT_FORM);
-      setPhotoName("");
       setStatus("success");
     } catch (error) {
       console.error("Web3Forms submission failed:", error);
@@ -511,12 +502,15 @@ function ContactForm({ language, services }) {
           <label className="form-radio"><input type="radio" name="contactMethod" value={content.contactText} checked={form.contactMethod === content.contactText} onChange={handleChange} /> <span>{content.contactText}</span></label>
         </div>
       </div>
-      <label className="form-field form-photo">
+      <div className="form-field form-photo">
         <span>{content.photo}</span>
-        <input type="file" name="attachment" accept="image/*" capture="environment" onChange={handlePhoto} />
-        <small className="form-hint">{content.photoHint}</small>
-        {photoName && <span className="form-photo-name">{photoName}</span>}
-      </label>
+        <small className="form-hint">
+          {content.photoHint}{" "}
+          <a href={`mailto:${EMAIL}?subject=${encodeURIComponent(translations[language].contact.emailSubject)}`}>
+            {EMAIL}
+          </a>
+        </small>
+      </div>
       <label className="form-field form-message">
         <span>{content.message}<em className="req" aria-label={content.required}>*</em></span>
         <textarea name="message" value={form.message} onChange={handleChange} rows="4" required />
