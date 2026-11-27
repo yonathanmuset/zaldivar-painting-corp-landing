@@ -15,7 +15,8 @@
 
 - **Video spotlight**: el video activo se muestra grande; los demás como miniaturas pequeñas. Al hacer clic en una miniatura, ese video se agranda y se reproduce automáticamente; el anterior se reduce.
 - **Responsive**: en móvil, las miniaturas se convierten en una fila horizontal deslizable debajo del video grande.
-- **Formulario de contacto** con campos: nombre, correo, teléfono, dirección del proyecto, tipo de servicio (menú desplegable), descripción del proyecto.
+- **Formulario de contacto** con campos: nombre, correo, teléfono, dirección del proyecto, **fecha preferida de inicio (selector de calendario)**, tipo de servicio (menú desplegable), descripción del proyecto.
+- La fecha seleccionada se incluye automáticamente en el correo generado, en español e inglés.
 - **Envío del formulario**: abre la aplicación de correo del usuario con los datos organizados y listos para enviar al correo de Zaldiver Painting.
 - Estructura basada en componentes (`VideoSpotlight`, `ContactForm`).
 - Breakpoints responsive definidos en CSS.
@@ -23,7 +24,7 @@
 ## Decisions, constraints & rationale
 
 - Framework: **Vite + React**.
-- Internacionalización con traducciones manuales (ES/EN) — se actualizaron traducciones en inglés al agregar el campo de dirección.
+- Internacionalización con traducciones manuales (ES/EN) — se actualizaron traducciones al agregar el campo de dirección y el campo de fecha.
 - El formulario no usa backend; depende del cliente de correo del usuario para el envío.
 - Se verificó la compilación con build tras cada cambio significativo.
 
@@ -31,7 +32,6 @@
 
 - **Pendientes propuestos al cliente** (sin confirmar):
   - Adjuntar foto de referencia desde el teléfono.
-  - Campo de fecha preferida para el proyecto.
   - Casilla para elegir llamada o texto como método de contacto.
   - Guardar solicitudes en base de datos para no depender solo del correo.
 - Se asume que el correo destino de Zaldivar Painting ya está configurado en el formulario.

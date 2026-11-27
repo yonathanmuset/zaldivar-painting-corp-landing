@@ -126,6 +126,7 @@ const translations = {
         email: "Email address",
         phone: "Phone number",
         address: "Project address",
+        preferredDate: "Preferred start date",
         service: "Service of interest",
         message: "Tell us about your project",
         selectService: "Select a service",
@@ -247,6 +248,7 @@ const translations = {
         email: "Correo electrónico",
         phone: "Teléfono",
         address: "Dirección del proyecto",
+        preferredDate: "Fecha preferida de inicio",
         service: "Servicio de interés",
         message: "Cuéntanos sobre tu proyecto",
         selectService: "Selecciona un servicio",
@@ -358,7 +360,7 @@ function VideoSpotlight({ videos, content }) {
 }
 
 function ContactForm({ content, emailSubject }) {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", service: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", preferredDate: "", service: "", message: "" });
   const [status, setStatus] = useState("idle");
 
   const handleChange = (event) => {
@@ -378,6 +380,7 @@ function ContactForm({ content, emailSubject }) {
       `Email: ${form.email}`,
       form.phone ? `Phone: ${form.phone}` : null,
       form.address ? `Address: ${form.address}` : null,
+      form.preferredDate ? `Preferred start date: ${form.preferredDate}` : null,
       form.service ? `Service: ${form.service}` : null,
       "",
       `Message:`,
@@ -410,6 +413,10 @@ function ContactForm({ content, emailSubject }) {
           <input type="text" name="address" value={form.address} onChange={handleChange} autoComplete="street-address" />
         </label>
       </div>
+      <label className="form-message">
+        <span>{content.preferredDate}</span>
+        <input type="date" name="preferredDate" value={form.preferredDate} onChange={handleChange} />
+      </label>
       <label className="form-message">
         <span>{content.service}</span>
         <select name="service" value={form.service} onChange={handleChange}>
