@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
 const PHONE = "516-373-8437";
 const EMAIL = "Kevinzaldivar00@gmail.com";
 const INSTAGRAM = "https://www.instagram.com/zpainting.corp";
+const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit";
+const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || "c192271a-9321-4eb0-a81a-ac1638946fb6";
+const EMPTY_CONTACT_FORM = { name: "", email: "", phone: "", address: "", preferredDate: "", service: "", contactMethod: "", message: "" };
 
 // Contenidos fáciles de editar: agrega o reemplaza elementos aquí.
 const heroImages = [
@@ -100,6 +103,7 @@ const translations = {
       title: "A closer look at our work",
       fallback: "Your browser does not support this video.",
       label: "Project video",
+      autoplayFallback: "If playback doesn't start automatically, press play to begin.",
     },
     process: {
       eyebrow: "OUR PROCESS",
@@ -118,35 +122,34 @@ const translations = {
       emphasis: "that lasts.",
       estimate: "Request your free estimate",
       emailSubject: "Free estimate request",
-      phone: "CALL US",
-      address: "ADDRESS",
-      instagram: "INSTAGRAM",
       form: {
+        eyebrow: "YOUR PROJECT STARTS HERE",
+        title: "Tell us about your project",
+        description: "Share a few details and our team will follow up with you.",
+        requiredNote: "Fields marked with * are required",
         name: "Full name",
         email: "Email address",
-        required: "required",
         phone: "Phone number",
         address: "Project address",
-        preferredDate: "Preferred start date",
-        service: "Service of interest",
-        message: "Tell us about your project",
+        preferredDate: "Preferred date",
+        service: "Service needed",
         selectService: "Select a service",
         contactMethod: "Preferred contact method",
         contactCall: "Phone call",
         contactText: "Text message",
         photo: "Reference photo (optional)",
         photoHint: "Take or choose a photo from your phone",
+        message: "Project details",
         submit: "Send request",
-        success: "Thank you! Your email app will open with the details pre-filled. We'll get back to you shortly.",
-        error: "Please fill in your name, email, and a brief message before sending.",
-        services: [
-          "Interior & exterior painting",
-          "Cabinets, kitchens & furniture",
-          "Drywall, joint compound & repairs",
-          "Staining & pressure washing",
-          "Other / not sure yet",
-        ],
+        required: "required",
+        sending: "Sending your request...",
+        success: "Your request was sent. We will be in touch soon.",
+        error: "We couldn't send your request. Please try again.",
+        missingKey: "The form is not configured yet. Please contact us by phone or email.",
       },
+      phone: "CALL US",
+      address: "ADDRESS",
+      instagram: "INSTAGRAM",
     },
     footer: "All rights reserved.",
   },
@@ -228,6 +231,7 @@ const translations = {
       title: "Proceso y detalles del trabajo",
       fallback: "Tu navegador no puede reproducir este video.",
       label: "Video de proyecto",
+      autoplayFallback: "Si el video no inicia automáticamente, presiona reproducir.",
     },
     process: {
       eyebrow: "CÓMO TRABAJAMOS",
@@ -246,35 +250,34 @@ const translations = {
       emphasis: "que dure.",
       estimate: "Solicita tu estimado gratis",
       emailSubject: "Solicitud de estimado",
-      phone: "LLÁMANOS",
-      address: "DIRECCIÓN",
-      instagram: "INSTAGRAM",
       form: {
+        eyebrow: "EMPECEMOS TU PROYECTO",
+        title: "Cuéntanos sobre tu proyecto",
+        description: "Comparte algunos detalles y nuestro equipo se pondrá en contacto.",
+        requiredNote: "Los campos marcados con * son obligatorios",
         name: "Nombre completo",
         email: "Correo electrónico",
-        required: "obligatorio",
         phone: "Teléfono",
         address: "Dirección del proyecto",
-        preferredDate: "Fecha preferida de inicio",
-        service: "Servicio de interés",
-        message: "Cuéntanos sobre tu proyecto",
+        preferredDate: "Fecha preferida",
+        service: "Servicio que necesitas",
         selectService: "Selecciona un servicio",
         contactMethod: "Método de contacto preferido",
         contactCall: "Llamada telefónica",
         contactText: "Mensaje de texto",
         photo: "Foto de referencia (opcional)",
         photoHint: "Toma o elige una foto desde tu teléfono",
+        message: "Detalles del proyecto",
         submit: "Enviar solicitud",
-        success: "Gracias! Tu aplicación de correo se abrirá con los datos listos. Te contactaremos pronto.",
-        error: "Por favor completa tu nombre, correo y un mensaje breve antes de enviar.",
-        services: [
-          "Pintura interior y exterior",
-          "Gabinetes, cocinas y muebles",
-          "Drywall, compound y reparaciones",
-          "Stain y lavado a presión",
-          "Otro / no estoy seguro",
-        ],
+        required: "obligatorio",
+        sending: "Enviando tu solicitud...",
+        success: "Tu solicitud fue enviada. Pronto nos pondremos en contacto.",
+        error: "No pudimos enviar tu solicitud. Inténtalo de nuevo.",
+        missingKey: "El formulario aún no está configurado. Contáctanos por teléfono o correo.",
       },
+      phone: "LLÁMANOS",
+      address: "DIRECCIÓN",
+      instagram: "INSTAGRAM",
     },
     footer: "Todos los derechos reservados.",
   },
@@ -301,14 +304,44 @@ function Logo({ label }) {
 
 function VideoSpotlight({ videos, content }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [autoPlayIndex, setAutoPlayIndex] = useState(null);
   const [hasError, setHasError] = useState(false);
+  const [playbackIssue, setPlaybackIssue] = useState(false);
+  const playerRef = useRef(null);
   const activeVideo = videos[activeIndex];
   const activeProject = content.projects.items[activeIndex % content.projects.items.length];
 
   const handleSelect = (index) => {
     setActiveIndex(index);
+    setAutoPlayIndex(index);
     setHasError(false);
+    setPlaybackIssue(false);
   };
+
+  useEffect(() => {
+    if (autoPlayIndex !== activeIndex || !playerRef.current) return undefined;
+
+    let isCurrentPlayer = true;
+    const timer = window.setTimeout(() => {
+      const player = playerRef.current;
+      if (!player) return;
+
+      player.muted = true;
+      player.play().then(() => {
+        if (isCurrentPlayer) setPlaybackIssue(false);
+      }).catch((error) => {
+        if (!isCurrentPlayer) return;
+        if (error.name !== "AbortError") console.error("Could not autoplay selected project video:", error);
+        setPlaybackIssue(true);
+      });
+    }, 0);
+
+    return () => {
+      isCurrentPlayer = false;
+      window.clearTimeout(timer);
+      playerRef.current?.pause();
+    };
+  }, [activeIndex, activeVideo.source, autoPlayIndex]);
 
   return (
     <div className="video-spotlight">
@@ -316,15 +349,19 @@ function VideoSpotlight({ videos, content }) {
         <div className="video-spotlight-frame">
           <img className="video-poster" src={activeVideo.poster} alt="" aria-hidden="true" />
           <video
+            ref={playerRef}
             key={activeVideo.number}
             controls
             playsInline
             preload="metadata"
             poster={activeVideo.poster}
-            autoPlay
+            muted={autoPlayIndex === activeIndex}
             aria-label={`${content.videos.label} ${activeVideo.number}: ${activeProject.title}`}
             onError={() => setHasError(true)}
-            onPlaying={() => setHasError(false)}
+            onPlaying={() => {
+              setHasError(false);
+              setPlaybackIssue(false);
+            }}
           >
             <source src={activeVideo.source} type="video/mp4" />
             {content.videos.fallback}
@@ -340,6 +377,7 @@ function VideoSpotlight({ videos, content }) {
         <div className="video-spotlight-caption">
           <small>{activeProject.category}</small>
           <h3>{activeProject.title}</h3>
+          {playbackIssue && <p className="video-autoplay-note" role="status">{content.videos.autoplayFallback}</p>}
         </div>
       </div>
       <div className="video-thumb-strip">
@@ -371,101 +409,130 @@ function VideoSpotlight({ videos, content }) {
   );
 }
 
-function ContactForm({ content, emailSubject }) {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", preferredDate: "", service: "", contactMethod: "", message: "" });
+function ContactForm({ language, services }) {
+  const content = translations[language].contact.form;
+  const [form, setForm] = useState(EMPTY_CONTACT_FORM);
   const [photoName, setPhotoName] = useState("");
   const [status, setStatus] = useState("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((currentForm) => ({ ...currentForm, [name]: value }));
+    setStatus("idle");
+    setErrorMessage("");
   };
 
   const handlePhoto = (event) => {
     const file = event.target.files && event.target.files[0];
     setPhotoName(file ? file.name : "");
+    setStatus("idle");
+    setErrorMessage("");
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
-      setStatus("error");
+    if (!WEB3FORMS_ACCESS_KEY) {
+      setStatus("configuration-error");
       return;
     }
-    const subject = `${emailSubject} — ${form.name}`;
-    const body = [
-      `Name: ${form.name}`,
-      `Email: ${form.email}`,
-      form.phone ? `Phone: ${form.phone}` : null,
-      form.address ? `Address: ${form.address}` : null,
-      form.preferredDate ? `Preferred start date: ${form.preferredDate}` : null,
-      form.service ? `Service: ${form.service}` : null,
-      form.contactMethod ? `Preferred contact: ${form.contactMethod}` : null,
-      photoName ? `Reference photo: ${photoName} (attached separately)` : null,
-      "",
-      `Message:`,
-      form.message,
-    ].filter(Boolean).join("\n");
 
-    window.location.href = `mailto:${EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    setStatus("success");
+    const formElement = event.currentTarget;
+    const payload = new FormData(formElement);
+    payload.append("access_key", WEB3FORMS_ACCESS_KEY);
+    payload.append("subject", `${translations[language].contact.emailSubject} - Zaldivar Painting Corp`);
+    payload.append("from_name", "Zaldivar Painting Corp");
+
+    setStatus("sending");
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(WEB3FORMS_ENDPOINT, {
+        method: "POST",
+        body: payload,
+        headers: { Accept: "application/json" },
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Web3Forms rejected the submission.");
+      }
+
+      formElement.reset();
+      setForm(EMPTY_CONTACT_FORM);
+      setPhotoName("");
+      setStatus("success");
+    } catch (error) {
+      console.error("Web3Forms submission failed:", error);
+      setStatus("error");
+      setErrorMessage(error.message);
+    }
   };
 
   return (
-    <form className="contact-form" onSubmit={handleSubmit} noValidate>
-      <div className="form-row">
-        <label>
-          <span>{content.name} <em className="req">{content.required}</em></span>
-          <input type="text" name="name" value={form.name} onChange={handleChange} autoComplete="name" required />
-        </label>
-        <label>
-          <span>{content.email} <em className="req">{content.required}</em></span>
-          <input type="email" name="email" value={form.email} onChange={handleChange} autoComplete="email" required />
-        </label>
+    <form className="contact-form" onSubmit={handleSubmit}>
+      <div className="form-header">
+        <p className="form-eyebrow">{content.eyebrow}</p>
+        <h3>{content.title}</h3>
+        <p>{content.description}</p>
+        <p className="form-required-note"><em aria-hidden="true">*</em> {content.requiredNote}</p>
       </div>
-      <div className="form-row">
-        <label>
-          <span>{content.phone}</span>
-          <input type="tel" name="phone" value={form.phone} onChange={handleChange} autoComplete="tel" />
-        </label>
-        <label>
-          <span>{content.address}</span>
-          <input type="text" name="address" value={form.address} onChange={handleChange} autoComplete="street-address" />
-        </label>
-      </div>
-      <label className="form-message">
+      <label className="form-field">
+        <span>{content.name}<em className="req" aria-label={content.required}>*</em></span>
+        <input type="text" name="name" value={form.name} onChange={handleChange} autoComplete="name" required />
+      </label>
+      <label className="form-field">
+        <span>{content.email}<em className="req" aria-label={content.required}>*</em></span>
+        <input type="email" name="email" value={form.email} onChange={handleChange} autoComplete="email" required />
+      </label>
+      <label className="form-field">
+        <span>{content.phone}</span>
+        <input type="tel" name="phone" value={form.phone} onChange={handleChange} autoComplete="tel" />
+      </label>
+      <label className="form-field">
+        <span>{content.address}</span>
+        <input type="text" name="address" value={form.address} onChange={handleChange} autoComplete="street-address" />
+      </label>
+      <label className="form-field">
         <span>{content.preferredDate}</span>
         <input type="date" name="preferredDate" value={form.preferredDate} onChange={handleChange} min={new Date().toISOString().split("T")[0]} />
       </label>
-      <label className="form-message">
+      <label className="form-field">
         <span>{content.service}</span>
         <select name="service" value={form.service} onChange={handleChange}>
           <option value="">{content.selectService}</option>
-          {content.services.map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
+          {services.map((service) => <option key={service.title} value={service.title}>{service.title}</option>)}
         </select>
       </label>
-      <div className="form-field">
+      <div className="form-field form-contact-method">
         <span>{content.contactMethod}</span>
         <div className="form-radios">
           <label className="form-radio"><input type="radio" name="contactMethod" value={content.contactCall} checked={form.contactMethod === content.contactCall} onChange={handleChange} /> <span>{content.contactCall}</span></label>
           <label className="form-radio"><input type="radio" name="contactMethod" value={content.contactText} checked={form.contactMethod === content.contactText} onChange={handleChange} /> <span>{content.contactText}</span></label>
         </div>
       </div>
-      <label className="form-field">
+      <label className="form-field form-photo">
         <span>{content.photo}</span>
-        <input type="file" name="photo" accept="image/*" capture="environment" onChange={handlePhoto} />
+        <input type="file" name="attachment" accept="image/*" capture="environment" onChange={handlePhoto} />
         <small className="form-hint">{content.photoHint}</small>
         {photoName && <span className="form-photo-name">{photoName}</span>}
       </label>
-      <label className="form-message">
-        <span>{content.message} <em className="req">{content.required}</em></span>
-        <textarea name="message" value={form.message} onChange={handleChange} rows={4} required />
+      <label className="form-field form-message">
+        <span>{content.message}<em className="req" aria-label={content.required}>*</em></span>
+        <textarea name="message" value={form.message} onChange={handleChange} rows="4" required />
       </label>
-      {status === "error" && <p className="form-error" role="alert">{content.error}</p>}
-      {status === "success" && <p className="form-success" role="status">{content.success}</p>}
-      <button type="submit" className="button button-dark form-submit">{content.submit} <Arrow /></button>
+      <div className="form-footer">
+        <button className="button button-dark form-submit" type="submit" disabled={status === "sending"}>
+          {status === "sending" ? content.sending : content.submit}
+          {status !== "sending" && <Arrow />}
+        </button>
+        {status !== "idle" && status !== "sending" && (
+          <p className={`form-status form-status-${status}`} role={status === "error" || status === "configuration-error" ? "alert" : "status"}>
+            {status === "success" ? content.success : status === "configuration-error" ? content.missingKey : content.error}
+            {errorMessage && <span className="form-status-detail"> {errorMessage}</span>}
+          </p>
+        )}
+      </div>
     </form>
   );
 }
@@ -684,7 +751,7 @@ function App() {
                 <div><small>{content.contact.instagram}</small><a href={INSTAGRAM} target="_blank" rel="noreferrer">@zpainting.corp</a></div>
               </address>
             </div>
-            <ContactForm content={content.contact.form} emailSubject={content.contact.emailSubject} />
+            <ContactForm language={language} services={services} />
           </div>
         </section>
       </main>
