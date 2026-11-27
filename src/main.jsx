@@ -131,6 +131,11 @@ const translations = {
         service: "Service of interest",
         message: "Tell us about your project",
         selectService: "Select a service",
+        contactMethod: "Preferred contact method",
+        contactCall: "Phone call",
+        contactText: "Text message",
+        photo: "Reference photo (optional)",
+        photoHint: "Take or choose a photo from your phone",
         submit: "Send request",
         success: "Thank you! Your email app will open with the details pre-filled. We'll get back to you shortly.",
         error: "Please fill in your name, email, and a brief message before sending.",
@@ -254,6 +259,11 @@ const translations = {
         service: "Servicio de interés",
         message: "Cuéntanos sobre tu proyecto",
         selectService: "Selecciona un servicio",
+        contactMethod: "Método de contacto preferido",
+        contactCall: "Llamada telefónica",
+        contactText: "Mensaje de texto",
+        photo: "Foto de referencia (opcional)",
+        photoHint: "Toma o elige una foto desde tu teléfono",
         submit: "Enviar solicitud",
         success: "Gracias! Tu aplicación de correo se abrirá con los datos listos. Te contactaremos pronto.",
         error: "Por favor completa tu nombre, correo y un mensaje breve antes de enviar.",
@@ -362,12 +372,18 @@ function VideoSpotlight({ videos, content }) {
 }
 
 function ContactForm({ content, emailSubject }) {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", preferredDate: "", service: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", preferredDate: "", service: "", contactMethod: "", message: "" });
+  const [photoName, setPhotoName] = useState("");
   const [status, setStatus] = useState("idle");
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePhoto = (event) => {
+    const file = event.target.files && event.target.files[0];
+    setPhotoName(file ? file.name : "");
   };
 
   const handleSubmit = (event) => {
@@ -384,6 +400,8 @@ function ContactForm({ content, emailSubject }) {
       form.address ? `Address: ${form.address}` : null,
       form.preferredDate ? `Preferred start date: ${form.preferredDate}` : null,
       form.service ? `Service: ${form.service}` : null,
+      form.contactMethod ? `Preferred contact: ${form.contactMethod}` : null,
+      photoName ? `Reference photo: ${photoName} (attached separately)` : null,
       "",
       `Message:`,
       form.message,
@@ -427,6 +445,19 @@ function ContactForm({ content, emailSubject }) {
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
+      </label>
+      <div className="form-field">
+        <span>{content.contactMethod}</span>
+        <div className="form-radios">
+          <label className="form-radio"><input type="radio" name="contactMethod" value={content.contactCall} checked={form.contactMethod === content.contactCall} onChange={handleChange} /> <span>{content.contactCall}</span></label>
+          <label className="form-radio"><input type="radio" name="contactMethod" value={content.contactText} checked={form.contactMethod === content.contactText} onChange={handleChange} /> <span>{content.contactText}</span></label>
+        </div>
+      </div>
+      <label className="form-field">
+        <span>{content.photo}</span>
+        <input type="file" name="photo" accept="image/*" capture="environment" onChange={handlePhoto} />
+        <small className="form-hint">{content.photoHint}</small>
+        {photoName && <span className="form-photo-name">{photoName}</span>}
       </label>
       <label className="form-message">
         <span>{content.message} <em className="req">{content.required}</em></span>
