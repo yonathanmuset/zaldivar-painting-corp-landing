@@ -3,11 +3,10 @@ import { createRoot } from "react-dom/client";
 import "./styles.css";
 
 const PHONE = "516-373-8437";
-const EMAIL = "Kevinzaldivar00@gmail.com";
 const INSTAGRAM = "https://www.instagram.com/zpainting.corp";
 const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit";
 const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || "c192271a-9321-4eb0-a81a-ac1638946fb6";
-const EMPTY_CONTACT_FORM = { name: "", email: "", phone: "", address: "", preferredDate: "", service: "", contactMethod: "", message: "" };
+const EMPTY_CONTACT_FORM = { name: "", email: "", phone: "", address: "", preferredDate: "", service: "", serviceDetails: "", contactMethod: "", message: "" };
 
 // Contenidos fáciles de editar: agrega o reemplaza elementos aquí.
 const heroImages = [
@@ -134,16 +133,20 @@ const translations = {
         preferredDate: "Preferred date",
         service: "Service needed",
         selectService: "Select a service",
+        otherService: "Other",
+        serviceDetails: "Describe the work",
+        serviceDetailsPlaceholder: "Briefly describe the work you need",
         contactMethod: "Preferred contact method",
         contactCall: "Phone call",
         contactText: "Text message",
-        photo: "Want to share a reference photo?",
-        photoHint: "File attachments aren't supported by this form. Send photos separately to",
         message: "Project details",
         submit: "Send request",
         required: "required",
         sending: "Sending your request...",
         success: "Your request was sent. We will be in touch soon.",
+        successEyebrow: "REQUEST RECEIVED",
+        successTitle: "Thank you for reaching out.",
+        newRequest: "Send another request",
         error: "We couldn't send your request. Please try again.",
         missingKey: "The form is not configured yet. Please contact us by phone or email.",
       },
@@ -262,16 +265,20 @@ const translations = {
         preferredDate: "Fecha preferida",
         service: "Servicio que necesitas",
         selectService: "Selecciona un servicio",
+        otherService: "Otro",
+        serviceDetails: "Describe el trabajo que necesitas",
+        serviceDetailsPlaceholder: "Cuéntanos brevemente qué trabajo necesitas",
         contactMethod: "Método de contacto preferido",
         contactCall: "Llamada telefónica",
         contactText: "Mensaje de texto",
-        photo: "¿Quieres compartir una foto de referencia?",
-        photoHint: "Este formulario no admite archivos adjuntos. Envía las fotos por separado a",
         message: "Detalles del proyecto",
         submit: "Enviar solicitud",
         required: "obligatorio",
         sending: "Enviando tu solicitud...",
         success: "Tu solicitud fue enviada. Pronto nos pondremos en contacto.",
+        successEyebrow: "SOLICITUD RECIBIDA",
+        successTitle: "Gracias por contactarnos.",
+        newRequest: "Enviar otra solicitud",
         error: "No pudimos enviar tu solicitud. Inténtalo de nuevo.",
         missingKey: "El formulario aún no está configurado. Contáctanos por teléfono o correo.",
       },
@@ -434,6 +441,9 @@ function ContactForm({ language, services }) {
     payload.append("access_key", WEB3FORMS_ACCESS_KEY);
     payload.append("subject", `${translations[language].contact.emailSubject} - Zaldivar Painting Corp`);
     payload.append("from_name", "Zaldivar Painting Corp");
+    if (form.service === "other") {
+      payload.set("service", `${content.otherService}: ${form.serviceDetails}`);
+    }
 
     setStatus("sending");
     setErrorMessage("");
@@ -459,6 +469,24 @@ function ContactForm({ language, services }) {
       setErrorMessage(error.message);
     }
   };
+
+  if (status === "success") {
+    return (
+      <div className="contact-success" role="status" aria-live="polite">
+        <span className="contact-success-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="m5 12.5 4.5 4.5L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+        <p className="form-eyebrow">{content.successEyebrow}</p>
+        <h3>{content.successTitle}</h3>
+        <p className="contact-success-message">{content.success}</p>
+        <button className="button button-dark contact-success-button" type="button" onClick={() => setStatus("idle")}>
+          {content.newRequest}<Arrow />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <form className="contact-form" onSubmit={handleSubmit}>
@@ -493,23 +521,28 @@ function ContactForm({ language, services }) {
         <select name="service" value={form.service} onChange={handleChange}>
           <option value="">{content.selectService}</option>
           {services.map((service) => <option key={service.title} value={service.title}>{service.title}</option>)}
+          <option value="other">{content.otherService}</option>
         </select>
       </label>
+      {form.service === "other" && (
+        <label className="form-field form-service-details">
+          <span>{content.serviceDetails}<em className="req" aria-label={content.required}>*</em></span>
+          <input
+            type="text"
+            name="serviceDetails"
+            value={form.serviceDetails}
+            onChange={handleChange}
+            placeholder={content.serviceDetailsPlaceholder}
+            required
+          />
+        </label>
+      )}
       <div className="form-field form-contact-method">
         <span>{content.contactMethod}</span>
         <div className="form-radios">
           <label className="form-radio"><input type="radio" name="contactMethod" value={content.contactCall} checked={form.contactMethod === content.contactCall} onChange={handleChange} /> <span>{content.contactCall}</span></label>
           <label className="form-radio"><input type="radio" name="contactMethod" value={content.contactText} checked={form.contactMethod === content.contactText} onChange={handleChange} /> <span>{content.contactText}</span></label>
         </div>
-      </div>
-      <div className="form-field form-photo">
-        <span>{content.photo}</span>
-        <small className="form-hint">
-          {content.photoHint}{" "}
-          <a href={`mailto:${EMAIL}?subject=${encodeURIComponent(translations[language].contact.emailSubject)}`}>
-            {EMAIL}
-          </a>
-        </small>
       </div>
       <label className="form-field form-message">
         <span>{content.message}<em className="req" aria-label={content.required}>*</em></span>
@@ -522,7 +555,7 @@ function ContactForm({ language, services }) {
         </button>
         {status !== "idle" && status !== "sending" && (
           <p className={`form-status form-status-${status}`} role={status === "error" || status === "configuration-error" ? "alert" : "status"}>
-            {status === "success" ? content.success : status === "configuration-error" ? content.missingKey : content.error}
+            {status === "configuration-error" ? content.missingKey : content.error}
             {errorMessage && <span className="form-status-detail"> {errorMessage}</span>}
           </p>
         )}
