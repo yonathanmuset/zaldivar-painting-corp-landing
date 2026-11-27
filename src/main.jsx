@@ -125,6 +125,7 @@ const translations = {
         name: "Full name",
         email: "Email address",
         phone: "Phone number",
+        address: "Project address",
         service: "Service of interest",
         message: "Tell us about your project",
         selectService: "Select a service",
@@ -245,8 +246,9 @@ const translations = {
         name: "Nombre completo",
         email: "Correo electrónico",
         phone: "Teléfono",
-        message: "Cuéntanos sobre tu proyecto",
+        address: "Dirección del proyecto",
         service: "Servicio de interés",
+        message: "Cuéntanos sobre tu proyecto",
         selectService: "Selecciona un servicio",
         submit: "Enviar solicitud",
         success: "Gracias! Tu aplicación de correo se abrirá con los datos listos. Te contactaremos pronto.",
@@ -283,43 +285,80 @@ function Logo({ label }) {
   );
 }
 
-function ProjectVideoCard({ video, content, project, featured = false }) {
+function VideoSpotlight({ videos, content }) {
+  const [activeIndex, setActiveIndex] = useState(0);
   const [hasError, setHasError] = useState(false);
+  const activeVideo = videos[activeIndex];
+  const activeProject = content.projects.items[activeIndex % content.projects.items.length];
+
+  const handleSelect = (index) => {
+    setActiveIndex(index);
+    setHasError(false);
+  };
 
   return (
-    <article className={`video-card ${featured ? "video-card-featured" : ""}`}>
-      <div className="video-frame">
-        <img className="video-poster" src={video.poster} alt="" aria-hidden="true" />
-        <video
-          controls
-          playsInline
-          preload="metadata"
-          poster={video.poster}
-          aria-label={`${content.videos.label} ${video.number}: ${project.title}`}
-          onError={() => setHasError(true)}
-          onPlaying={() => setHasError(false)}
-        >
-          <source src={video.source} type="video/mp4" />
-          {content.videos.fallback}
-        </video>
-        {hasError && (
-          <div className="video-error" role="alert">
-            <span aria-hidden="true">!</span>
-            <p>{content.videos.fallback}</p>
-          </div>
-        )}
-        <span className="video-badge">{content.videos.project} {video.number}</span>
+    <div className="video-spotlight">
+      <div className="video-spotlight-main">
+        <div className="video-spotlight-frame">
+          <img className="video-poster" src={activeVideo.poster} alt="" aria-hidden="true" />
+          <video
+            key={activeVideo.number}
+            controls
+            playsInline
+            preload="metadata"
+            poster={activeVideo.poster}
+            autoPlay
+            aria-label={`${content.videos.label} ${activeVideo.number}: ${activeProject.title}`}
+            onError={() => setHasError(true)}
+            onPlaying={() => setHasError(false)}
+          >
+            <source src={activeVideo.source} type="video/mp4" />
+            {content.videos.fallback}
+          </video>
+          {hasError && (
+            <div className="video-error" role="alert">
+              <span aria-hidden="true">!</span>
+              <p>{content.videos.fallback}</p>
+            </div>
+          )}
+          <span className="video-badge">{content.videos.project} {activeVideo.number}</span>
+        </div>
+        <div className="video-spotlight-caption">
+          <small>{activeProject.category}</small>
+          <h3>{activeProject.title}</h3>
+        </div>
       </div>
-      <div className="video-caption">
-        <small>{project.category}</small>
-        <h3>{project.title}</h3>
+      <div className="video-thumb-strip">
+        {videos.map((video, index) => {
+          const project = content.projects.items[index % content.projects.items.length];
+          const isActive = index === activeIndex;
+          return (
+            <button
+              key={video.number}
+              type="button"
+              className={`video-thumb ${isActive ? "is-active" : ""}`}
+              onClick={() => handleSelect(index)}
+              aria-label={`${content.videos.label} ${video.number}: ${project.title}`}
+            >
+              <div className="video-thumb-frame">
+                <img src={video.poster} alt="" loading="lazy" />
+                <span className="video-thumb-number">{video.number}</span>
+                {isActive && <span className="video-thumb-playing" aria-hidden="true">▶</span>}
+              </div>
+              <div className="video-thumb-info">
+                <small>{project.category}</small>
+                <span>{project.title}</span>
+              </div>
+            </button>
+          );
+        })}
       </div>
-    </article>
+    </div>
   );
 }
 
 function ContactForm({ content, emailSubject }) {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", service: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", service: "", message: "" });
   const [status, setStatus] = useState("idle");
 
   const handleChange = (event) => {
@@ -338,6 +377,7 @@ function ContactForm({ content, emailSubject }) {
       `Name: ${form.name}`,
       `Email: ${form.email}`,
       form.phone ? `Phone: ${form.phone}` : null,
+      form.address ? `Address: ${form.address}` : null,
       form.service ? `Service: ${form.service}` : null,
       "",
       `Message:`,
@@ -366,15 +406,19 @@ function ContactForm({ content, emailSubject }) {
           <input type="tel" name="phone" value={form.phone} onChange={handleChange} autoComplete="tel" />
         </label>
         <label>
-          <span>{content.service}</span>
-          <select name="service" value={form.service} onChange={handleChange}>
-            <option value="">{content.selectService}</option>
-            {content.services.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
+          <span>{content.address}</span>
+          <input type="text" name="address" value={form.address} onChange={handleChange} autoComplete="street-address" />
         </label>
       </div>
+      <label className="form-message">
+        <span>{content.service}</span>
+        <select name="service" value={form.service} onChange={handleChange}>
+          <option value="">{content.selectService}</option>
+          {content.services.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </label>
       <label className="form-message">
         <span>{content.message}</span>
         <textarea name="message" value={form.message} onChange={handleChange} rows={4} />
@@ -567,26 +611,7 @@ function App() {
               </div>
               <p>{content.videos.description}</p>
             </div>
-            <div className="video-layout">
-              <div className="video-featured">
-                <ProjectVideoCard
-                  video={projectVideos[0]}
-                  content={content}
-                  project={content.projects.items[0]}
-                  featured
-                />
-              </div>
-              <div className="video-grid">
-                {projectVideos.slice(1).map((video, index) => (
-                  <ProjectVideoCard
-                    key={video.number}
-                    video={video}
-                    content={content}
-                    project={content.projects.items[(index + 1) % content.projects.items.length]}
-                  />
-                ))}
-              </div>
-            </div>
+            <VideoSpotlight videos={projectVideos} content={content} />
           </div>
         </section>
 
