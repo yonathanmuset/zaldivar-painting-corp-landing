@@ -124,6 +124,7 @@ const translations = {
       form: {
         name: "Full name",
         email: "Email address",
+        required: "required",
         phone: "Phone number",
         address: "Project address",
         preferredDate: "Preferred start date",
@@ -246,6 +247,7 @@ const translations = {
       form: {
         name: "Nombre completo",
         email: "Correo electrónico",
+        required: "obligatorio",
         phone: "Teléfono",
         address: "Dirección del proyecto",
         preferredDate: "Fecha preferida de inicio",
@@ -395,12 +397,12 @@ function ContactForm({ content, emailSubject }) {
     <form className="contact-form" onSubmit={handleSubmit} noValidate>
       <div className="form-row">
         <label>
-          <span>{content.name}</span>
-          <input type="text" name="name" value={form.name} onChange={handleChange} autoComplete="name" />
+          <span>{content.name} <em className="req">{content.required}</em></span>
+          <input type="text" name="name" value={form.name} onChange={handleChange} autoComplete="name" required />
         </label>
         <label>
-          <span>{content.email}</span>
-          <input type="email" name="email" value={form.email} onChange={handleChange} autoComplete="email" />
+          <span>{content.email} <em className="req">{content.required}</em></span>
+          <input type="email" name="email" value={form.email} onChange={handleChange} autoComplete="email" required />
         </label>
       </div>
       <div className="form-row">
@@ -415,7 +417,7 @@ function ContactForm({ content, emailSubject }) {
       </div>
       <label className="form-message">
         <span>{content.preferredDate}</span>
-        <input type="date" name="preferredDate" value={form.preferredDate} onChange={handleChange} />
+        <input type="date" name="preferredDate" value={form.preferredDate} onChange={handleChange} min={new Date().toISOString().split("T")[0]} />
       </label>
       <label className="form-message">
         <span>{content.service}</span>
@@ -427,8 +429,8 @@ function ContactForm({ content, emailSubject }) {
         </select>
       </label>
       <label className="form-message">
-        <span>{content.message}</span>
-        <textarea name="message" value={form.message} onChange={handleChange} rows={4} />
+        <span>{content.message} <em className="req">{content.required}</em></span>
+        <textarea name="message" value={form.message} onChange={handleChange} rows={4} required />
       </label>
       {status === "error" && <p className="form-error" role="alert">{content.error}</p>}
       {status === "success" && <p className="form-success" role="status">{content.success}</p>}

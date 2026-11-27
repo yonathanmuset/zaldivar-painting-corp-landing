@@ -177,6 +177,7 @@ h1 em, h2 em { color: var(--aqua); font-weight: 600; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .contact-form label { display: flex; flex-direction: column; gap: 7px; }
 .contact-form label span { font-size: 11px; font-weight: 800; letter-spacing: .12em; color: var(--ink); opacity: .7; text-transform: uppercase; }
+.contact-form label span em.req { font-style: normal; color: #c0392b; font-size: 9px; margin-left: 4px; text-transform: lowercase; letter-spacing: .06em; opacity: .8; }
 .contact-form input, .contact-form select, .contact-form textarea { font: inherit; font-size: 14px; padding: 12px 14px; border: 1px solid #d7d6d0; border-radius: 7px; background: var(--paper); color: var(--ink); transition: border-color .25s, box-shadow .25s; }
 .contact-form input:focus, .contact-form select:focus, .contact-form textarea:focus { outline: none; border-color: var(--aqua); box-shadow: 0 0 0 3px rgba(23,217,193,.18); }
 .contact-form textarea { resize: vertical; min-height: 90px; }
