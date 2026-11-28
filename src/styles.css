@@ -195,6 +195,9 @@ h1 em, h2 em { color: var(--aqua); font-weight: 600; }
 .contact-form label span { font-size: 10px; font-weight: 700; color: #273740; text-transform: uppercase; letter-spacing: .09em; }
 .contact-form label span em.req { font-style: normal; color: #b7463e; font-size: 13px; margin-left: 4px; letter-spacing: 0; }
 .contact-form input:not([type="radio"]), .contact-form select, .contact-form textarea { width: 100%; min-width: 0; min-height: 52px; border: 1px solid #d9ddd9; border-radius: 10px; padding: 13px 15px; background: rgba(255,255,255,.78); color: var(--ink); font: inherit; font-size: 14px; transition: border-color .2s, box-shadow .2s, background .2s; }
+.contact-form input[type="date"] { box-sizing: border-box; display: block; width: 100%; min-width: 0; max-width: 100%; -webkit-appearance: none; appearance: none; text-align: left; }
+.contact-form input[type="date"]::-webkit-date-and-time-value { min-width: 0; text-align: left; }
+.contact-form input[type="date"]::-webkit-calendar-picker-indicator { flex: 0 0 auto; margin: 0; }
 .contact-form input:hover, .contact-form select:hover, .contact-form textarea:hover { border-color: #9daea9; }
 .contact-form input:focus, .contact-form select:focus, .contact-form textarea:focus { outline: 0; border-color: #359d91; box-shadow: 0 0 0 3px rgba(23,217,193,.15); background: #fff; }
 .contact-form textarea { min-height: 132px; resize: vertical; }
@@ -347,7 +350,7 @@ h1 em, h2 em { color: var(--aqua); font-weight: 600; }
   .video-thumb:hover { transform: translateY(-2px); }
   .video-thumb-frame { width: 100%; height: auto; aspect-ratio: 9 / 16; }
   .video-thumb-info { width: 100%; padding: 9px 8px 11px; text-align: center; overflow-wrap: anywhere; }
-  .contact-form input[type="date"] { display: block; width: 100%; max-width: 100%; min-width: 0; }
+  .contact-form input[type="date"] { width: 100%; max-width: 100%; min-width: 0; padding-inline: 12px; }
   .process-step,
   .process-step:not(:first-child) { height: auto; min-height: 0; overflow: visible; padding-bottom: 26px; }
   .process-step p { margin-bottom: 0; }
